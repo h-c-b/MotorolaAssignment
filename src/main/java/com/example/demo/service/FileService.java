@@ -1,8 +1,11 @@
 package com.example.demo.service;
 
 import com.example.demo.repository.FileRepository;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.FileNotFoundException;
 
 @Service
 public class FileService {
@@ -20,7 +23,12 @@ public class FileService {
         this._fileRepository.writeFile(file);
     }
 
-    public void downloadFile(String name) {
-        this._fileRepository.getFile(name);
+    public Resource downloadFile(String name) throws FileNotFoundException {
+        var fileToDownLoad = this._fileRepository.getFile(name);
+        if(fileToDownLoad.exists()) {
+            return fileToDownLoad;
+        } else {
+            throw new FileNotFoundException();
+        }
     }
 }
