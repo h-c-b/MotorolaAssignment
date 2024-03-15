@@ -1,48 +1,41 @@
 package com.example.demo.controller;
 
-import com.example.demo.service.FileService;
+import com.example.demo.service.IFileService;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/files")
-public class FileController {
-    private final FileService _fileService;
-    public FileController(FileService fileService) {
-        this._fileService = fileService;
+public class FileController implements IFileController {
+    private final IFileService fileService;
+
+    public FileController(IFileService fileService) {
+        this.fileService = fileService;
     }
 
-    @PostMapping
-    public void uploadFiles(@RequestBody MultipartFile file) {
-        this._fileService.uploadFile(file);
+    @PostMapping(produces = "application/json")
+    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
+        this.fileService.uploadFile(file);
+        return ResponseEntity.status(HttpStatus.OK).body(file.getOriginalFilename());
     }
 
-     @GetMapping
-     public void getFileNames() {
+     @GetMapping(produces = "application/json")
+     public ResponseEntity<String> getFileNames() throws IOException {
+        List<String> fileNames = fileService.getFileNames();
+        return ResponseEntity.status(HttpStatus.OK).body(String.join(",", fileNames));
      }
 
-     @GetMapping("/{fileName}")
-     public ResponseEntity<?> downloadFileByName(@PathVariable String fileName) {
-        if(fileName.contains(" ")) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("");
-        }
-        try {
-           Resource fileToDownLoad  = _fileService.downloadFile(fileName);
-           return ResponseEntity.status(HttpStatus.FOUND)
-                   .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
-                   .contentType(MediaType.parseMediaType("application/octet-stream"))
+     @GetMapping(value ="/{fileName}", produces = "application/octet-stream")
+     public ResponseEntity<Resource> downloadFile(@PathVariable String fileName) throws MalformedURLException {
+           fileService.validateFileName(fileName);
+           Resource fileToDownLoad  = fileService.downloadFile(fileName);
+           return ResponseEntity.status(HttpStatus.OK)
+                   .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;",  "filename=\"" + fileName + "\"")
                    .body(fileToDownLoad);
-        } catch(FileNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("");
-        } catch(Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("");
-        }
      }
 }
