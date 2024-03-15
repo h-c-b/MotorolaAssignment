@@ -17,17 +17,19 @@ public class FileRepository implements IFileRepository {
 
     @Value("${fileStoreRoot}")
     private String rootDirPath;
-    
+
     public boolean saveFile(MultipartFile file) throws IOException {
         Files.createDirectories(Path.of(rootDirPath));
         return Files.copy(file.getInputStream(), Path.of(rootDirPath, file.getOriginalFilename())) > 0;
     }
 
     public Resource getFile(String fileName) throws MalformedURLException {
+//        Files.createDirectories(Path.of(rootDirPath));
         return new UrlResource(Path.of(rootDirPath, fileName).toUri());
     }
 
     public Stream<Path> getFileNames() throws IOException {
+        Files.createDirectories(Path.of(rootDirPath));
         return Files.list(Path.of(rootDirPath));
     }
 }

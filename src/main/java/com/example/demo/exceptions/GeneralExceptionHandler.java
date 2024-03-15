@@ -13,7 +13,9 @@ import java.net.MalformedURLException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.InvalidPathException;
 
-
+/**
+ * Collection of exception handlers
+ */
 @ControllerAdvice
 public class GeneralExceptionHandler extends ResponseEntityExceptionHandler {
 
